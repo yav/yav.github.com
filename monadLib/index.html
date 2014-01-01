@@ -1,0 +1,144 @@
+<!DOCTYPE html
+PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>monadLib</title>
+<link rel="stylesheet" type="text/css" href="../style.css" />
+
+<script type="text/javascript">
+<!--
+var current = "Home";
+
+function init() {
+  document.getElementById("bHome").style.fontWeight = "bold";
+  document.getElementById("pDownload").style.display = "none";
+  document.getElementById("pInstall").style.display = "none";
+  document.getElementById("pDocs").style.display = "none";
+}
+
+function turnTo(page) {
+  document.getElementById("p" + current).style.display = "none";
+  document.getElementById("b" + current).style.fontWeight = "normal";
+  current = page;
+  document.getElementById("p" + current).style.display = "block";
+  document.getElementById("b" + current).style.fontWeight = "bold";
+}
+
+
+-->
+</script>
+</head>
+
+
+<body>
+<div id="content_box">
+
+
+<div id="header">
+<a id="bHome"     href="#pHome" onclick="void(turnTo('Home'))">monadLib</a>
+<a id="bDownload" href="#pDownload" onclick="void(turnTo('Download'))">Download</a>
+<a id="bInstall"  href="#pInstall" onclick="void(turnTo('Install'))">Installation</a>
+<a id="bDocs"     href="#pDocs" onclick="void(turnTo('Docs'))">Documentation</a>
+</div>  <!-- header -->
+
+<div id="content">
+
+
+
+<a name="pHome"></a>
+<div id="pHome">
+<h1>monadLib</h1>
+
+Welcome!  This is a library written in the programming language 
+<a href="http://www.haskell.org">Haskell</a>. 
+It can be used by Haskell programmers to quickly construct 
+<a href="http://en.wikipedia.org/wiki/Monads_in_functional_programming">
+monads</a>---abstract data types that capture common programming idioms.
+The library provides a number of building blocks called monad transformers,
+that can be combined to construct quickly very complicated monads.
+<p><a href="http://yav.purely-functional.net">-Iavor</a></p>
+
+<h2>News</h2>
+<ul>
+<li><span class="date">11 Aug 2008:</span> There is a <a href="http://www.haskell.org/haskellwiki/MonadLib">page for monadLib</a> on the Haskell wiki.
+<li><span class="date">5 Feb 2008:</span> Version 3.4.4 is now available.
+Some changes: a new backtracking transformer called ChoiceT, strictness tweaks,
+Applicative and Alternative instances, instances of ExceptionM for IO.
+<li><span class="date">17 Sep 2007:</span> Version 3.3.0 is now available.
+It adds an identity transformer (useful as a place-holder) and functions
+to "derive" basic functions.</li>
+<li><span class="date">18 Jan 2007:</span> Version 3.1.0 is now available.  It features a new strict identity monad called 'Lift'.</li>
+<li><span class="date">02 Jan 2007:</span> Version 3.0.0 is now available.
+Note that, while similar, it is not a drop-in replacement for Version 2.</li>
+<li><span class="date">02 Jan 2007:</span> Happy New Year!</li>
+<li><span class="date">12 December 2006:</span> A new major release is coming soon!</li>
+<li><span class="date">12 December 2006:</span> To compile monadLib with GHC 6.6 you need to add the flag <code>-fallow-undecidable-instances</code> to the cabal file.</li>
+<li><span class="date">19 April 2006:</span> Version 2.0.1 released (small changes in Monad.Combinators).</li>
+<li><span class="date">12 April 2006:</span> A new look for the web site.</li>
+<li><span class="date">19 March 2006:</span> Version 2.0 released.</li>
+</ul>
+
+</div>  <!-- pHome -->
+
+
+<a name="pDownload"></a>
+<div id="pDownload">
+<h2>Download</h2>
+monadLib is <a href="http://hackage.haskell.org/cgi-bin/hackage-scripts/package/monadLib">available on hackage</a>.
+</div> <!-- Download -->
+
+
+
+<a name="pInstall"></a>
+<div id="pInstall">
+<h2>Installation</h2>
+
+<h3>Prerequisites</h3>
+The library is distributed in source form and is written entirely in Haskell. 
+It uses the following Haskell extensions:
+<ul>
+  <li> Multi parameter classes</li>
+  <li> Rank 2 polymorphism</li>
+  <li> Functional dependencies </li>
+</ul>
+
+<h3>Quick Start</h3>
+The simplest (but perhaps not nicest) way to get started is to copy the source files to your project directory. Up to version 2 the directory structure
+mattered.  As of version 3, the library is in a single file so you just need
+to place <tt>MonadLib.hs</tt> in a location where your Haskell
+implementation will find it.
+
+<h3>Cabal</h3>
+From version 1.2.2 the library supports the Cabal infrastructure. 
+See the INSTALL file that comes with the source code for details.
+</div>  <!-- pInstall -->
+
+
+<a name="pDocs"></a>
+<div id="pDocs">
+<h2>Documentation</h2>
+<ul>
+<li><a href="doc">The library interface</a> for the current version.</li>
+<li>The <a href="monadLib_talk.pdf">slides</a> for a talk I gave about <tt>monadLib</tt>.</li>
+</ul>
+
+</div> <!-- pDocs -->
+
+</div>  <!-- content -->
+
+
+<div id="footer">email user: iavor.diatchki, server: gmail.com
+</div>
+
+</div>  <!-- context box --> 
+
+
+<script type="text/javascript">
+init();
+</script>
+</body>
+
+
+
+</html>
