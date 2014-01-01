@@ -1,0 +1,101 @@
+<html>
+<head>
+<title>Haskell Code in LaTeX</title>
+<link type="text/css" rel="stylesheet" href="../style.css" />
+</head>
+
+
+<body>
+<div id="content_box">
+<div id="header">
+<a href="..">Home</a>
+</div>
+
+<div id="content">
+<h1>Haskell Code in LaTeX</h1>
+<p><a href="http://www.haskell.org">Haskell</a> supports <a href="http://en.wikipedia.org/wiki/Literate_programming">literate programming</a>.
+There are two ways to add code to a literate Haskell script.
+</p>
+
+<p>The first method is to prefix code lines with a greater-then sign (&gt;).
+Here is an example:
+<pre>
+This text is a literate comment.
+This is an example program that prints the 11th Fibonacci number:
+
+> main = print (fibs !! 10)
+>  where fibs = 0 : 1 : [ x + y | (x,y) <- zip fibs (tail fibs) ]
+
+This is also a comment.  When we use this style of literate programming,
+we have to separate code and comments with a blank line.
+</pre>
+</p>
+
+<p>
+For me, the above is the preferred way of writing literate code.
+However, Haskell supports another way of adding code to literate scripts
+which was specifically added to support embedding Haskell code in
+<a href="http://www.latex-project.org/">LaTeX</a> documents.
+This is useful in situations when we want to make sure that the code in
+an academic article is well-formed.  We can write the article as a literate
+Haskell script, and then use a Haskell implementation (e.g., <a href="http://www.haskell.org/ghc">GHC</a>)
+to validate the code.   In this style, text that belongs to the LaTeX
+environment <tt>code</tt> is considered to be Haskell code.
+Here is the above example written in this style:
+<pre>
+This text is a literate comment.
+This is an example program that prints the 11th Fibonacci number:
+\begin{code}
+main = print (fibs !! 10)
+  where fibs = 0 : 1 : [ x + y | (x,y) <- zip fibs (tail fibs) ]
+\end{code}
+This is also a comment.  When we use this style of literate programming,
+we do not need to separate the text and the code blank lines.
+</pre>
+</p>
+
+Note that <tt>code</tt> is not a predefined LaTeX environment.
+It needs to be defined by the LaTeX user to specify how to layout code.
+One way to do this is to use the <a href="http://citeseer.ist.psu.edu/468496.html">fancyvrb</a> LaTeX package.
+This package makes it easy to specify various formatting options for verbatim text.
+To define <tt>code</tt> with the <tt>fancyvrb</tt> package simply add the following to
+the top (preamble) of you LaTeX article:
+<pre>
+\usepackage{fancyvrb}
+\DefineVerbatimEnvironment{code}{Verbatim}{fontsize=\small}
+\DefineVerbatimEnvironment{example}{Verbatim}{fontsize=\small}
+\newcommand{\ignore}[1]{}
+</pre>
+The first line specifies that we are using fancyvrb, the second defines the
+<tt>code</tt> environment, and the third line defines another environment (not strictly necessary)
+which can be used for text that should be formatted as code but should not be checked
+by the compiler (e.g., sample output).  The parameters to the environment definitions
+specify that we are using the <tt>Verbatim</tt> environment (fancyvrb provides
+other environments too), and that we would like code to be typeset with a small font
+(there are other options that can be specified here, see the fancyvrb documentation).
+The fourth line is also not strictly necessary but it is useful to remove code
+that does not belong to the paper but is still necessary for the rest of the implementation
+to work.  Here is an example of how to use these macros:
+<pre>
+Some ordinary text.
+\begin{code}
+-- This is visible in the paper and to the Haskell implementation.
+\end{code}
+\begin{example}
+This is visible in the paper but it is ignored by Haskell.
+Still, it is typeset as code.
+\end{example}
+\ignore{
+\begin{code}
+-- This is not visible in the paper but is visible to Haskell
+\end{code}
+}
+</pre>
+</p>
+</div>
+<div id="footer">email user: iavor.diatchki, server: gmail.com</div>
+</div>
+</body>
+
+
+</html>
