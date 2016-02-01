@@ -1,0 +1,172 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; }
+code > span.dt { color: #902000; }
+code > span.dv { color: #40a070; }
+code > span.bn { color: #40a070; }
+code > span.fl { color: #40a070; }
+code > span.ch { color: #4070a0; }
+code > span.st { color: #4070a0; }
+code > span.co { color: #60a0b0; font-style: italic; }
+code > span.ot { color: #007020; }
+code > span.al { color: #ff0000; font-weight: bold; }
+code > span.fu { color: #06287e; }
+code > span.er { color: #ff0000; font-weight: bold; }
+  </style>
+</head>
+<body>
+<h1 id="the-problem">The Problem</h1>
+<p>The problem you are encountering is because in GHC type-families may not appear in the head of a class instance, and (+) is just a type family.</p>
+<p>In general, this make sense because such instances do not always make sense. Consider, for example, the following code:</p>
+<pre><code>class C a where
+  f :: a -&gt; String
+
+type family F a
+type instance F Int  = Char
+type instance F Bool = Char
+
+-- bad instance
+instance C (F a)</code></pre>
+<p>Now, if GHC encounters a constraint <code>C Char</code>, there is no way to know if <code>a</code> should be <code>Int</code> or <code>Bool</code>. One could make the case that such instances should be allowed as long as <code>F</code> is injective, but no one has implemented that yet.</p>
+<p>One possible work-around is to change:</p>
+<pre><code>instance C (F a)</code></pre>
+<p>into</p>
+<pre><code>instance (F a ~ b) =&gt; C b</code></pre>
+<p>This is a valid instance, but one has to be careful, as GHC consults only the instance &quot;head&quot; (i.e., the predicate on the RHS of the fat arrow) when selecting instances, and the context is ignored. Since in this case the instance &quot;head&quot; is just a variable, we have end up with a very general instance.</p>
+<h2 id="extensions-an-imports">Extensions an Imports</h2>
+<p>The rest of the file has two solutions. The first one, which is more natural, requires the use of a type-checker plugin, which can be enabled with the following flag (if installed):</p>
+<pre><code>{-# OPTIONS_GHC -fplugin=TypeNatSolver #-} -- use plugin</code></pre>
+<pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">{-# LANGUAGE GADTs #-}</span>
+<span class="co">-- To define the type `Vec`</span></code></pre>
+<pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">{-# LANGUAGE DataKinds, KindSignatures, TypeOperators #-}</span>
+<span class="co">-- For working with type level literals</span></code></pre>
+<pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">{-# LANGUAGE FlexibleInstances, UndecidableInstances #-}</span>
+<span class="co">-- For defining &quot;exotic&quot; instances</span></code></pre>
+<pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="kw">module</span> <span class="dt">VecFuntorInstance</span> <span class="kw">where</span>
+
+<span class="kw">import </span><span class="dt">GHC.TypeLits</span>
+<span class="kw">import </span><span class="dt">Data.Proxy</span></code></pre>
+<h2 id="the-type-of-vectors-with-a-fixed-length">The Type of Vectors with a Fixed Length</h2>
+<p>We start by defining the type of vectors of a fixed length.</p>
+<pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="kw">data</span> <span class="dt">Vec</span> (<span class="ot">n::</span><span class="dt">Nat</span>) a <span class="kw">where</span>
+  <span class="dt">Nil</span><span class="ot">  ::</span> <span class="dt">Vec</span> <span class="dv">0</span> a
+  <span class="dt">Cons</span><span class="ot"> ::</span> a <span class="ot">-&gt;</span> <span class="dt">Vec</span> n a <span class="ot">-&gt;</span> <span class="dt">Vec</span> (n<span class="fu">+</span><span class="dv">1</span>) a
+
+<span class="co">-- | Convert a vector to a list; useful for debugging.</span>
+<span class="ot">toList ::</span> <span class="dt">Vec</span> n a <span class="ot">-&gt;</span> [a]
+toList vec <span class="fu">=</span>
+  <span class="kw">case</span> vec <span class="kw">of</span>
+    <span class="dt">Nil</span>       <span class="ot">-&gt;</span> []
+    <span class="dt">Cons</span> x xs <span class="ot">-&gt;</span> x <span class="fu">:</span> toList xs
+
+<span class="kw">instance</span> <span class="dt">Show</span> a <span class="ot">=&gt;</span> <span class="dt">Show</span> (<span class="dt">Vec</span> n a) <span class="kw">where</span>
+  showsPrec p <span class="fu">=</span> showsPrec p <span class="fu">.</span> toList</code></pre>
+<h2 id="the-basic-idea">The Basic Idea</h2>
+<p>We illustrate the basic idea by defining an overloaded function that generates a constant vector of a given length, by consulting the type of the vector.</p>
+<pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="kw">class</span> <span class="dt">ConstVec</span> n <span class="kw">where</span>
+<span class="ot">  constVec ::</span> a <span class="ot">-&gt;</span> <span class="dt">Vec</span> n a</code></pre>
+<p>The base case instance is nothing special:</p>
+<pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="kw">instance</span> <span class="dt">ConstVec</span> <span class="dv">0</span> <span class="kw">where</span>
+  constVec _ <span class="fu">=</span> <span class="dt">Nil</span></code></pre>
+<p>The interesting case arises when we define the inductive step:</p>
+<pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="kw">instance</span> <span class="ot">{-# OVERLAPS #-}</span>
+  (<span class="dt">ConstVec</span> prev, (prev <span class="fu">+</span> <span class="dv">1</span>) <span class="fu">~</span> n) <span class="ot">=&gt;</span> <span class="dt">ConstVec</span> n
+  <span class="kw">where</span>
+  constVec a <span class="fu">=</span> <span class="dt">Cons</span> a (constVec a)</code></pre>
+<p>Note that, as discussed before, We moved the type-function to the instance's context and, also, we added the <code>OVERLAPS</code> pragma. This pragma tells GHC that we are defining an instance that overlaps another one, and so before committing to the more general one, it should make sure that the more specific one is guaranteed to not work.</p>
+<p>Here is an example of this at work:</p>
+<pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">make5 ::</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">Vec</span> <span class="dv">5</span> <span class="dt">Char</span>
+make5 <span class="fu">=</span> constVec</code></pre>
+<pre><code>*Test&gt; make5 &#39;b&#39;
+&quot;bbbbb&quot;</code></pre>
+<p>If we look at the generated Core for <code>make5</code> after compiling with optimizations, we see that GHC has fully unrolled all the loops:</p>
+<pre><code>make5
+make5 = ($sconstVec2) `cast` ...
+
+$sconstVec2
+$sconstVec2 =
+  \ @ a_X2et a1_X1Vj -&gt;
+    Cons
+      @~ &lt;4 + 1&gt;_N
+      a1_X1Vj
+      ((Cons
+          @~ &lt;3 + 1&gt;_N
+          a1_X1Vj
+          ((Cons
+              @~ &lt;2 + 1&gt;_N
+              a1_X1Vj
+              ((Cons
+                  @~ &lt;1 + 1&gt;_N
+                  a1_X1Vj
+                  ((Cons @~ &lt;0 + 1&gt;_N a1_X1Vj ($WNil)) `cast` ...))
+               `cast` ...))
+           `cast` ...))
+       `cast` ...)</code></pre>
+<h2 id="defining-a-functor-instance">Defining a Functor instance</h2>
+<p>To define an instance of the <code>Functor</code> class we use the same pattern:</p>
+<pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="kw">class</span> <span class="dt">MapVec</span> (<span class="ot">n ::</span> <span class="dt">Nat</span>) <span class="kw">where</span>
+<span class="ot">  mapVec ::</span> proxy n <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> <span class="dt">Vec</span> n a <span class="ot">-&gt;</span> <span class="dt">Vec</span> n b
+
+<span class="kw">instance</span> <span class="dt">MapVec</span> <span class="dv">0</span> <span class="kw">where</span>
+  mapVec _ _ _ <span class="fu">=</span> <span class="dt">Nil</span></code></pre>
+<pre><code>-- Only works with plugin
+instance {-# OVERLAPS #-} (MapVec prev, (prev + 1) ~ n) =&gt; MapVec n where
+  mapVec p f (Cons x xs) = Cons (f x) (mapVec (prev p) f xs)
+    where prev :: proxy (a + 1) -&gt; Proxy a
+          prev _ = Proxy</code></pre>
+<pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="kw">instance</span> <span class="dt">MapVec</span> n <span class="ot">=&gt;</span> <span class="dt">Functor</span> (<span class="dt">Vec</span> n) <span class="kw">where</span>
+  fmap <span class="fu">=</span> mapVec <span class="dt">Proxy</span></code></pre>
+<p>Unfortunately the inductive instance is rejected by vanilla GHC 7.10 because it has very little knowledge about how numbers work---the only thing GHC knows is how to evaluate functions on numbers (e.g., it knows that 7 + 3 is 10). However, for this instance to be accepted we need to know about cancellation, in particular that if <code>(x + 1) ~ (y + 1)</code>, then it must be the case that <code>x ~ y</code>.</p>
+<p>This, and other facts about numbers, are implemented as a separate GHC plug-in, available from:</p>
+<pre><code>https://github.com/yav/type-nat-solver</code></pre>
+<p>To use the plugin one needs to invoke GHC with the <code>-fplugin=TypeNatSolver</code> (or add it as an <code>OPTION</code> pragma at the top of the file). The plug-in uses the <code>z3</code> (or another) SMT-solver to solve many of the linear numeric constraints arising from type-checking numbers.</p>
+<h2 id="a-version-without-using-a-plugin">A Version Without Using a Plugin</h2>
+<p>The simple solver built into GHC works only in simple cases (generally, if one uses GADTs, it is very likely that the advanced solver would be needed). However, in this case we can get a working implementation by reformulating the definition of the GADT as follows:</p>
+<pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="kw">data</span> <span class="dt">Vec&#39;</span> (<span class="ot">n::</span><span class="dt">Nat</span>) a <span class="kw">where</span>
+  <span class="dt">Nil&#39;</span><span class="ot">  ::</span> <span class="dt">Vec&#39;</span> <span class="dv">0</span> a
+  <span class="dt">Cons&#39;</span><span class="ot"> ::</span> a <span class="ot">-&gt;</span> <span class="dt">Vec&#39;</span> (n <span class="fu">-</span> <span class="dv">1</span>) a <span class="ot">-&gt;</span> <span class="dt">Vec&#39;</span> n a
+
+<span class="co">-- | Convert a vector to a list; useful for debugging.</span>
+<span class="ot">toList&#39; ::</span> <span class="dt">Vec&#39;</span> n a <span class="ot">-&gt;</span> [a]
+toList&#39; vec <span class="fu">=</span>
+  <span class="kw">case</span> vec <span class="kw">of</span>
+    <span class="dt">Nil&#39;</span>       <span class="ot">-&gt;</span> []
+    <span class="dt">Cons&#39;</span> x xs <span class="ot">-&gt;</span> x <span class="fu">:</span> toList&#39; xs
+
+<span class="kw">instance</span> <span class="dt">Show</span> a <span class="ot">=&gt;</span> <span class="dt">Show</span> (<span class="dt">Vec&#39;</span> n a) <span class="kw">where</span>
+  showsPrec p <span class="fu">=</span> showsPrec p <span class="fu">.</span> toList&#39;</code></pre>
+<pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="kw">class</span> <span class="dt">ConstVec&#39;</span> n <span class="kw">where</span>
+<span class="ot">  constVec&#39; ::</span> a <span class="ot">-&gt;</span> <span class="dt">Vec&#39;</span> n a
+
+<span class="kw">instance</span> <span class="dt">ConstVec&#39;</span> <span class="dv">0</span> <span class="kw">where</span>
+  constVec&#39; _ <span class="fu">=</span> <span class="dt">Nil&#39;</span>
+
+<span class="kw">instance</span> <span class="ot">{-# OVERLAPS #-}</span> (<span class="dt">ConstVec&#39;</span> (n<span class="fu">-</span><span class="dv">1</span>)) <span class="ot">=&gt;</span> <span class="dt">ConstVec&#39;</span> n <span class="kw">where</span>
+  constVec&#39; a <span class="fu">=</span> <span class="dt">Cons&#39;</span> a (constVec&#39; a)</code></pre>
+<pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="ot">make5&#39; ::</span> a <span class="ot">-&gt;</span> <span class="dt">Vec&#39;</span> <span class="dv">5</span> a
+make5&#39; <span class="fu">=</span> constVec&#39;</code></pre>
+<pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="kw">class</span> <span class="dt">MapVec&#39;</span> (<span class="ot">n ::</span> <span class="dt">Nat</span>) <span class="kw">where</span>
+<span class="ot">  mapVec&#39; ::</span> proxy n <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> <span class="dt">Vec&#39;</span> n a <span class="ot">-&gt;</span> <span class="dt">Vec&#39;</span> n b
+
+<span class="kw">instance</span> <span class="dt">MapVec&#39;</span> <span class="dv">0</span> <span class="kw">where</span>
+  mapVec&#39; _ _ _ <span class="fu">=</span> <span class="dt">Nil&#39;</span></code></pre>
+<pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="kw">instance</span> <span class="ot">{-# OVERLAPS #-}</span> (<span class="dt">MapVec&#39;</span> (n<span class="fu">-</span><span class="dv">1</span>)) <span class="ot">=&gt;</span> <span class="dt">MapVec&#39;</span> n <span class="kw">where</span>
+  mapVec&#39; p f (<span class="dt">Cons&#39;</span> x xs) <span class="fu">=</span> <span class="dt">Cons&#39;</span> (f x) (mapVec&#39; (prev p) f xs)
+    <span class="kw">where</span><span class="ot"> prev ::</span> proxy a <span class="ot">-&gt;</span> <span class="dt">Proxy</span> (a <span class="fu">-</span> <span class="dv">1</span>)
+          prev _ <span class="fu">=</span> <span class="dt">Proxy</span></code></pre>
+<pre class="sourceCode literate haskell"><code class="sourceCode haskell"><span class="kw">instance</span> <span class="dt">MapVec&#39;</span> n <span class="ot">=&gt;</span> <span class="dt">Functor</span> (<span class="dt">Vec&#39;</span> n) <span class="kw">where</span>
+  fmap <span class="fu">=</span> mapVec&#39; <span class="dt">Proxy</span></code></pre>
+</body>
+</html>
