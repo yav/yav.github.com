@@ -1,8 +1,18 @@
 The Problem
 ===========
 
-The problem you are encountering is because in GHC type-families may not
-appear in the head of a class instance, and (+) is just a type family.
+Suppose that we want to define an instance of `Functor` for vectors, whose
+type is tracked in the type system.  Just making a direct recursive definition
+is straight-forward, but we'd like to define the instance in such a way that
+GHC will unroll the loop when performing dictionary specialization.
+
+We may start with a definition that looks something like this:
+
+    instance Functor (Vec 0) where ...
+    instance Functor (Vec (n + 1)) where ...
+
+Unfortunately, in GHC type-families may not
+appear in the "head" of a class instance, and (+) is just a type family.
 
 In general, this make sense because such instances do not always make sense.
 Consider, for example, the following code:
