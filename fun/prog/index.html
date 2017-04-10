@@ -3,6 +3,11 @@
 <head>
 <link rel="stylesheet" href="font-awesome/css/font-awesome.min.css">
 <style>
+html { width: 100%; height: 100% }
+body {
+  width: 100%; height: 100%; background-color: black;
+  overflow: hidden;
+}
 </style>
 <script src="jquery.js"></script>
 <script>
@@ -38,11 +43,12 @@ function displayNew(w,h,l,t,v) {
   function change(up,n) {
     var thing = cont.find('.thing')
     var g = up ? -h : h
-    thing.animate({top: g}, 500, 'swing', function() { thing.remove() })
-
-    var inner = newThing(n).css('top',-g)
-    cont.append(inner)
-    inner.animate({top: 0}, 500, 'swing')
+    thing.animate({top: g}, 250, 'swing', function() {
+      thing.remove()
+      var inner = newThing(n).css('top',-g)
+      cont.append(inner)
+      inner.animate({top: 0}, 250, 'swing')
+    })
 
 
   }
@@ -76,13 +82,14 @@ function swiper(disp, i) {
 }
 
 function app(w,h) {
+  var b = $('body').empty()
+  var w = b.width()
+  var h = b.height()
   var rows = 2
   var cols = 5
 
   var dw = w/cols
   var dh = h/rows
-
-  var b = $('body').empty()
 
   for (var row = 0; row < rows; ++row) {
     for (var col = 0; col < cols; ++col) {
