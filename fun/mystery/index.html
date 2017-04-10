@@ -7,7 +7,12 @@ html { width: 100%; height: 100%; overflow: hidden; }
 body {
   width: 100%; height: 100%; background-color: black;
   overflow: hidden;
+  -webkit-user-select: none;
+  -moz-user-select: -moz-none;
+  -ms-user-select: none;
+  user-select: none;
 }
+
 </style>
 <script src="jquery.js"></script>
 <script>
@@ -23,23 +28,39 @@ var items = [ ['fa-arrow-up',   'red']
             ]
 
 
-function displayNew(w,h,l,t,v,lab) {
-  var cont = $('<div/>')
+function displayNew(wo,ho,l,t,v,lab) {
+
+  var outer = $('<div/>')
+             .css('overflow','hidden')
+             .css('display','inline-block')
+             .css('width',wo)
+             .css('height',ho)
+             .append( $('<div/>')
+                      .css('background-color','white')
+                      .css('margin','5px')
+                      .css('text-align','center')
+                      .text(lab)
+                     )
+
+
+  var b = $('body')
+  b.append(outer)
+
+  var w = wo
+  var h = 0.9 * ho
+
+  var inner = $('<div/>')
              .css('position','relative')
              .css('overflow','hidden')
              .css('width',w)
              .css('height',h)
-             .css('position','absolute')
-             .css('left',l)
-             .css('top',t)
-             .append($('<div/>')
-                     .css('background-color','white')
-                     .css('margin','5px')
-                     .css('text-align','center')
-                     .text(lab))
+
+  outer.append(inner)
+
 
   function newThing(c) {
     var info = items[c]
+    var sz = (w < h) ? w : h
     return $('<div/>')
            .addClass('thing')
            .css('position','absolute')
@@ -47,7 +68,7 @@ function displayNew(w,h,l,t,v,lab) {
            .css('height',h)
            .css('left', 0)
            .css('top', 0)
-           .css('font-size', w + 'px')
+           .css('font-size', sz + 'px')
            .css('line-height', h + 'px')
            .css('text-align','center')
            .append($('<i/>')
@@ -57,21 +78,20 @@ function displayNew(w,h,l,t,v,lab) {
   }
 
   function change(up,n) {
-    console.log(n)
-    var thing = cont.find('.thing')
+    var thing = inner.find('.thing')
     var g = up ? -h : h
     thing.animate({top: g}, 250, 'swing', function() {
       thing.remove()
-      var inner = newThing(n).css('top',-g)
-      cont.append(inner)
-      inner.animate({top: 0}, 250, 'swing')
+      var thing1 = newThing(n).css('top',-g)
+      inner.append(thing1)
+      thing1.animate({top: 0}, 250, 'swing')
     })
 
 
   }
 
-  cont.append(newThing(v))
-  return { dom: cont, change: change }
+  inner.append(newThing(v))
+  return { dom: inner, change: change }
 }
 
 
@@ -115,7 +135,6 @@ function app(w,h) {
     for (var col = 0; col < cols; ++col) {
       var d = displayNew(dw,dh,col * dw,row * dh,0,1 + row * cols + col)
       swiper(d)
-      b.append(d.dom)
     }
   }
 }
