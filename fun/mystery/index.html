@@ -20,13 +20,14 @@ html, body {
 <script>
 
 
-var items = [ ['fa-arrow-up',   'red']
-            , ['fa-arrow-up',   'green']
-            , ['fa-arrow-up',   'blue']
-            , ['fa-arrow-up',   'yellow']
-            , ['fa-binoculars', 'white']
-            , ['fa-key',        'white']
-            , ['fa-pause',      'white']
+var items = [ ['fa fa-arrow-up', 'red', '']
+            , ['fa fa-arrow-up', 'purple', '']
+            , ['fa fa-arrow-up', 'blue', '']
+            , ['fa fa-arrow-up', 'green', '']
+            , ['fa fa-circle',   'orange', '']
+            , ['',               'white', 'E']
+            , ['',               'white', 'OC']
+            , ['',               'white', 'X']
             ]
 
 
@@ -63,6 +64,7 @@ function displayNew(wo,ho,l,t,v,lab) {
   function newThing(c) {
     var info = items[c]
     var sz = (w < h) ? w : h
+    if (info[2].length > 1) sz = sz / info[2].length
     return $('<div/>')
            .addClass('thing')
            .css('position','absolute')
@@ -74,9 +76,10 @@ function displayNew(wo,ho,l,t,v,lab) {
            .css('line-height', h + 'px')
            .css('text-align','center')
            .append($('<i/>')
-                   .addClass('fa ' + info[0])
+                   .addClass(info[0])
                    .attr('aria-hidden','true')
-                   .css('color',info[1]))
+                   .css('color',info[1])
+                   .text(info[2]))
   }
 
   function change(up,n) {
