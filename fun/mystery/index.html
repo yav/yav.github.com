@@ -121,6 +121,7 @@ function swiper(disp) {
   disp.dom
     .bind('touchstart',function(ev) { y = getY(ev) })
     .bind('touchmove',function(ev) {
+      ev.stopImmediatePropagation()
       if (y === null) return
        var y1 = getY(ev)
        var d = y1 - y
