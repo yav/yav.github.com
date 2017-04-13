@@ -24,7 +24,7 @@ var items = [ ['fa fa-arrow-up', 'red', '']
             , ['fa fa-arrow-up', 'purple', '']
             , ['fa fa-arrow-up', 'blue', '']
             , ['fa fa-arrow-up', 'green', '']
-            , ['fa fa-circle',   'orange', '']
+            , ['',               'orange', '&#x2022;']
             , ['',               'white', 'E']
             , ['',               'white', 'OC']
             , ['',               'white', 'X']
@@ -64,7 +64,14 @@ function displayNew(wo,ho,l,t,v,lab) {
   function newThing(c) {
     var info = items[c]
     var sz = (w < h) ? w : h
-    if (info[2].length > 1) sz = sz / info[2].length
+
+    var i = $('<i/>')
+            .addClass(info[0])
+            .attr('aria-hidden','true')
+            .css('color',info[1])
+
+    if (info[2].length > 1 && info[2][0] !== '&') sz = sz / info[2].length
+
     return $('<div/>')
            .addClass('thing')
            .css('position','absolute')
@@ -75,11 +82,7 @@ function displayNew(wo,ho,l,t,v,lab) {
            .css('font-size', sz + 'px')
            .css('line-height', h + 'px')
            .css('text-align','center')
-           .append($('<i/>')
-                   .addClass(info[0])
-                   .attr('aria-hidden','true')
-                   .css('color',info[1])
-                   .text(info[2]))
+           .append(i.html(info[2]))
   }
 
   function change(up,n) {
