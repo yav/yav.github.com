@@ -1,0 +1,58 @@
+body {
+  background-image: url("images/1.jpg");
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.para {
+  background-color: rgba(255,255,255,0.9);
+  display: inline-block;
+  vertical-align: top;
+  padding: 1em;
+  border: 1px solid black;
+  margin-bottom: 5px;
+  border-radius: 10px;
+}
+
+.sync { display: inline-block;
+        margin-top: 1ex;
+     }
+
+.unknown.chord {
+   font-size: large;
+}
+
+     
+.chord { font-weight: bold;
+         font-size: smaller;
+         margin-right: 0.5em;
+       }
+
+
+.allChords {
+  display: inline-block;
+  float: right;
+}
+
+.chordRef {
+    display: inline-block;
+    background-color: rgba(255,255,255,0.9);
+    margin: 1px;
+    border-radius: 5px;
+    position: relative;
+}
+
+.chordRef .name {
+  position: absolute;
+  background-color: white;
+  width: 100%;
+  text-align: center;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+}
+
+.chordRef img {
+   width: 50px;
+   height: 70px;
+}
+

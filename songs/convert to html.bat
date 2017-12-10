@@ -1,0 +1,2 @@
+@src\render.exe %*
+@pause
