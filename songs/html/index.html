@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+<ul id="songs"></ul>
+<script>
+var list = document.getElementById("songs")
+var songs =
+  [ "01. All I want for Christmas is my two front teeth.html"
+  , "02. Blue Christmas.html"
+  , "03. The Christmas Song.html"
+  , "04. Christmas Time Is Here.html"
+  , "05. Do you Hear What I Hear.html"
+  , "06. Frosty the Snowman.html"
+  , "07. Have Yourself a Merry Little Christmas.html"
+  , "08. Jingle Bell Rock.html"
+  , "09. Home for the Holidays.html"
+  , "11. Rudolph the Red-Nosed Raindeer.html"
+  , "12. Silver Bells.html"
+  , "13. Sleigh Ride.html"
+  , "14. White Christmas.html"
+  , "15. Winter Wonderland.html"
+  , "16. John Lennon---Happy Christmas.html"
+  ]
+for (var i = 0; i < songs.length; ++i) {
+  var node = document.createElement("LI")
+  var link = document.createElement("A")
+  link.setAttribute("href",songs[i])
+  var text = document.createTextNode(songs[i])
+  link.appendChild(text)
+  node.appendChild(link)
+  list.appendChild(node)
+}
+</script>
+</body>
+</html>
+
+
